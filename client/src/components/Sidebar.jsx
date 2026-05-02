@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { TOPICS } from "../data/topics";
 
-export default function Sidebar({ progress, activeTopic, onSelectTopic, onResetTopic, isDark, onToggleTheme, onShowDashboard }) {
-  const { completedTopics, currentTopicId, streak } = progress;
+export default function Sidebar({ progress, activeTopic, onSelectTopic, onResetTopic, isDark, onToggleTheme, onShowHome, activeView }) {
+  const { completedTopics, currentTopicId, streak, userName } = progress;
   const [confirmReset, setConfirmReset] = useState(null);
 
   const handleResetClick = (e, topicId) => {
@@ -19,23 +19,39 @@ export default function Sidebar({ progress, activeTopic, onSelectTopic, onResetT
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="logo">
-          <span className="logo-icon">⚔️</span>
-          <span className="logo-text">DSA <span className="logo-accent">Grind</span></span>
+        {/* Logo row */}
+        <div className="sidebar-logo-row">
+          <div className="logo">
+            <span className="logo-icon">⚔️</span>
+            <span className="logo-text">DSA <span className="logo-accent">Grind</span></span>
+          </div>
+          <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
+            {isDark ? "☀️" : "🌙"}
+          </button>
         </div>
-        <p className="logo-sub">Zero to Hero</p>
-        <div className="streak-badge">
-          <span className="streak-fire">🔥</span>
-          <span className="streak-count">{streak?.days || 0}</span>
-          <span className="streak-label">day streak</span>
-        </div>
-        <button className="dashboard-btn" onClick={onShowDashboard}>
-          📊 Progress
-        </button>
-        <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
-          {isDark ? "☀️" : "🌙"}
+
+        {/* User row */}
+        {userName && (
+          <div className="sidebar-user">
+            <span className="sidebar-user-avatar">👤</span>
+            <span className="sidebar-user-name">{userName}</span>
+            <div className="sidebar-streak">
+              <span>🔥</span>
+              <span className="streak-count">{streak?.days || 0}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Home button */}
+        <button
+          className={`home-btn ${activeView === "home" ? "home-btn-active" : ""}`}
+          onClick={onShowHome}
+        >
+          🏠 Home
         </button>
       </div>
+
+      <div className="topics-label">Topics</div>
 
       <div className="topics-list">
         {TOPICS.map((topic) => {

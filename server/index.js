@@ -2,20 +2,17 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import Groq from "groq-sdk";
+import mongoose from "mongoose";
 
 dotenv.config();
 
 const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-import mongoose from "mongoose";
-
-// MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/dsa-grind")
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
-// Progress schema
 const progressSchema = new mongoose.Schema({
   key: { type: String, default: "local", unique: true },
   data: { type: Object, default: {} },
@@ -26,7 +23,7 @@ const Progress = mongoose.model("Progress", progressSchema);
 app.use(cors());
 app.use(express.json());
 
-const SYSTEM_PROMPT = `You are a DSA tutor. Your student is a developer learning DSA from absolute zero.
+const BASE_PROMPT = `You are a DSA tutor. Your student is a developer learning DSA from absolute zero.
 
 RULES:
 1. Teach as if student has ZERO coding knowledge — explain every term and symbol
@@ -49,16 +46,20 @@ PHASES per problem:
 TOPIC ORDER: Arrays → Strings → Hashing → Two Pointers → Sliding Window → Stack & Queue → Linked Lists → Binary Search → Recursion → Trees → Graphs → Dynamic Programming`;
 
 app.post("/api/chat", async (req, res) => {
-  const { messages } = req.body;
+  const { messages, userName } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "messages array required" });
   }
 
+  const systemPrompt = userName
+    ? `${BASE_PROMPT}\n\nThe student's name is ${userName}. Address them by name occasionally to keep it personal and encouraging.`
+    : BASE_PROMPT;
+
   try {
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+      messages: [{ role: "system", content: systemPrompt }, ...messages],
       temperature: 0.7,
       max_tokens: 1024,
     });
@@ -73,7 +74,6 @@ app.post("/api/chat", async (req, res) => {
 
 app.get("/api/health", (_, res) => res.json({ status: "ok" }));
 
-// Get progress
 app.get("/api/progress", async (req, res) => {
   try {
     const doc = await Progress.findOne({ key: "local" });
@@ -83,10 +83,9 @@ app.get("/api/progress", async (req, res) => {
   }
 });
 
-// Save progress
 app.post("/api/progress", async (req, res) => {
   try {
-    const doc = await Progress.findOneAndUpdate(
+    await Progress.findOneAndUpdate(
       { key: "local" },
       { data: req.body },
       { upsert: true, new: true }

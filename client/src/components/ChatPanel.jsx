@@ -70,7 +70,7 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
     setLoading(true);
 
     try {
-      const res = await axios.post("/api/chat", { messages: updated });
+      const res = await axios.post("/api/chat", { messages: updated, userName: progress?.userName || "" });
       const assistantMsg = { role: "assistant", content: res.data.reply };
       setMessages([...updated, assistantMsg]);
     } catch (err) {

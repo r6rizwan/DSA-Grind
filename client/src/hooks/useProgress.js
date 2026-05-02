@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
 const defaultProgress = {
+  userName: "",
   currentTopicId: 1,
   completedTopics: [],
   completedProblems: {},
@@ -27,16 +28,17 @@ async function saveProgress(data) {
 function updateStreak(progress) {
   const today = new Date().toDateString();
   const { streak } = progress;
-  if (streak.lastDate === today) return streak;
+  if (streak?.lastDate === today) return streak;
   const yesterday = new Date(Date.now() - 86400000).toDateString();
   return {
-    days: streak.lastDate === yesterday ? streak.days + 1 : 1,
+    days: streak?.lastDate === yesterday ? (streak.days || 0) + 1 : 1,
     lastDate: today,
   };
 }
 
 export function useProgress() {
   const [progress, setProgress] = useState(defaultProgress);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetchProgress()
@@ -45,13 +47,19 @@ export function useProgress() {
           setProgress({ ...defaultProgress, ...data });
         }
       })
-      .catch(() => { });
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
 
   const save = (updated) => {
     const withStreak = { ...updated, streak: updateStreak(updated) };
     setProgress(withStreak);
-    saveProgress(withStreak).catch(() => { });
+    saveProgress(withStreak).catch(() => {});
+  };
+
+  const saveName = (name) => {
+    const updated = { ...progress, userName: name };
+    save(updated);
   };
 
   const completeProblem = (topicId, problemIndex) => {
@@ -80,6 +88,13 @@ export function useProgress() {
     save(updated);
   };
 
+  const saveCode = (topicId, problemIndex, code) => {
+    const updated = { ...progress };
+    if (!updated.savedCodes) updated.savedCodes = {};
+    updated.savedCodes[`${topicId}-${problemIndex}`] = code;
+    save(updated);
+  };
+
   const resetTopic = (topicId) => {
     const updated = { ...progress };
     updated.completedTopics = updated.completedTopics.filter((id) => id !== topicId);
@@ -89,14 +104,7 @@ export function useProgress() {
     save(updated);
   };
 
-  const saveCode = (topicId, problemIndex, code) => {
-    const updated = { ...progress };
-    if (!updated.savedCodes) updated.savedCodes = {};
-    updated.savedCodes[`${topicId}-${problemIndex}`] = code;
-    save(updated);
-  };
+  const resetProgress = () => save({ ...defaultProgress, userName: progress.userName });
 
-  const resetProgress = () => save(defaultProgress);
-
-  return { progress, completeProblem, completeTopic, saveNote, saveCode, resetTopic, resetProgress };
+  return { progress, loaded, saveName, completeProblem, completeTopic, saveNote, saveCode, resetTopic, resetProgress };
 }

@@ -8,6 +8,21 @@ dotenv.config();
 const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+import mongoose from "mongoose";
+
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/dsa-grind")
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB error:", err));
+
+// Progress schema
+const progressSchema = new mongoose.Schema({
+  key: { type: String, default: "local", unique: true },
+  data: { type: Object, default: {} },
+}, { timestamps: true });
+
+const Progress = mongoose.model("Progress", progressSchema);
+
 app.use(cors());
 app.use(express.json());
 
@@ -73,6 +88,30 @@ app.post("/api/chat", async (req, res) => {
 });
 
 app.get("/api/health", (_, res) => res.json({ status: "ok" }));
+
+// Get progress
+app.get("/api/progress", async (req, res) => {
+  try {
+    const doc = await Progress.findOne({ key: "local" });
+    res.json(doc?.data || {});
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load progress" });
+  }
+});
+
+// Save progress
+app.post("/api/progress", async (req, res) => {
+  try {
+    const doc = await Progress.findOneAndUpdate(
+      { key: "local" },
+      { data: req.body },
+      { upsert: true, new: true }
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to save progress" });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -13,7 +13,7 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 - 🤖 **AI tutor (Groq + Llama 3.3 70B)** — explains concepts using real-world analogies before giving you the problem
 - 💻 **Monaco editor** (VS Code's engine) — write JavaScript solutions directly in the app
 - 🔍 **AI code review** — submit your solution and get detailed feedback + optimized version
-- 💾 **Auto progress tracking** — saves to localStorage, picks up where you left off
+- 💾 **Auto progress tracking** — saved to local MongoDB, survives browser clears
 - 🎨 **Vibrant UI** — each topic has its own color theme
 
 ---
@@ -25,7 +25,7 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 | Frontend | React 18, Vite, Monaco Editor |
 | Backend | Node.js, Express |
 | AI | Groq API (Llama 3.3 70B — free tier) |
-| Storage | localStorage (no database needed) |
+| Storage | MongoDB (local) |
 | Styling | Pure CSS with CSS Variables |
 
 ---
@@ -35,6 +35,7 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 ### Prerequisites
 - Node.js 18+
 - Free [Groq API key](https://console.groq.com) (no credit card required)
+- [MongoDB Community Server](https://www.mongodb.com/try/download/community) installed locally
 
 ### 1. Clone the repo
 ```bash
@@ -90,7 +91,7 @@ dsa-grind/
     │   ├── data/
     │   │   └── topics.js         # 12 topics × 5 problems each
     │   ├── hooks/
-    │   │   └── useProgress.js    # localStorage progress tracker
+    │   │   └── useProgress.js    # MongoDB progress tracker
     │   ├── App.jsx
     │   └── App.css
     └── package.json
@@ -138,6 +139,7 @@ The tutor is instructed to teach from absolute zero — every term, symbol, and 
 |----------|-------------|
 | `GROQ_API_KEY` | Your Groq API key from [console.groq.com](https://console.groq.com) |
 | `PORT` | Server port (default: 5000) |
+| `MONGODB_URI` | MongoDB connection string (default: localhost) |
 
 ---
 

@@ -260,6 +260,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-primary);
+  position: relative;
 }
 
 .chat-panel.empty-chat {
@@ -509,3 +510,51 @@ body {
 
 .send-btn:hover:not(:disabled) { opacity: 0.85; }
 .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.toast {
+  position: absolute;
+  bottom: 90px;
+  right: 24px;
+  background: #1a1a35;
+  border: 1px solid rgba(29, 209, 161, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.toast-undo {
+  background: rgba(29, 209, 161, 0.15);
+  border: 1px solid rgba(29, 209, 161, 0.3);
+  color: #1DD1A1;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toast-undo:hover { background: rgba(29, 209, 161, 0.25); }
+
+.toast-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background: #1DD1A1;
+  animation: shrink 4s linear forwards;
+}
+
+@keyframes shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}

@@ -1,6 +1,4 @@
-import { useState } from "react";
-
-const STORAGE_KEY = "dsa_tutor_progress";
+import { useState, useEffect } from "react";
 
 const defaultProgress = {
   currentTopicId: 1,
@@ -9,19 +7,34 @@ const defaultProgress = {
   currentProblemIndex: {},
 };
 
-export function useProgress() {
-  const [progress, setProgress] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : defaultProgress;
-    } catch {
-      return defaultProgress;
-    }
+async function fetchProgress() {
+  const res = await fetch("/api/progress");
+  if (!res.ok) throw new Error("Failed to fetch");
+  return res.json();
+}
+
+async function saveProgress(data) {
+  await fetch("/api/progress", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
   });
+}
+
+export function useProgress() {
+  const [progress, setProgress] = useState(defaultProgress);
+
+  useEffect(() => {
+    fetchProgress()
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) setProgress(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const save = (updated) => {
     setProgress(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    saveProgress(updated).catch(() => {});
   };
 
   const completeProblem = (topicId, problemIndex) => {

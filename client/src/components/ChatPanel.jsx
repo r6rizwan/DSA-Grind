@@ -10,6 +10,8 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete }) {
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   const [showEditor, setShowEditor] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const undoRef = useRef(null);
   const bottomRef = useRef(null);
   const prevProblemRef = useRef(null);
 
@@ -64,8 +66,17 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete }) {
   };
 
   const handleMarkDone = () => {
-    onProblemComplete?.();
-    sendMessage(`I understood this problem. Please give me a quick summary of what I learned and what's coming next.`, messages);
+    setShowToast(true);
+    undoRef.current = setTimeout(() => {
+      setShowToast(false);
+      onProblemComplete?.();
+      sendMessage(`I understood this problem. Please give me a quick summary of what I learned and what's coming next.`, messages);
+    }, 4000);
+  };
+
+  const handleUndo = () => {
+    clearTimeout(undoRef.current);
+    setShowToast(false);
   };
 
   if (!topic || problemIndex === null || problemIndex === undefined) {
@@ -148,6 +159,14 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete }) {
           ➤
         </button>
       </div>
+
+      {showToast && (
+        <div className="toast">
+          <span>✅ Marked as done</span>
+          <button className="toast-undo" onClick={handleUndo}>Undo</button>
+          <div className="toast-bar" />
+        </div>
+      )}
     </div>
   );
 }

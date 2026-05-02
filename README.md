@@ -15,6 +15,9 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 - 🔍 **AI code review** — submit your solution and get detailed feedback + optimized version
 - 💾 **Auto progress tracking** — saved to local MongoDB, survives browser clears
 - 🎨 **Vibrant UI** — each topic has its own color theme
+- 📝 **Notes per problem** — save your own summary and key insights for each problem
+- 🔥 **Streak tracker** — tracks your daily learning consistency
+- ↺ **Reset individual topic** — redo any topic without losing other progress
 
 ---
 
@@ -36,6 +39,11 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 - Node.js 18+
 - Free [Groq API key](https://console.groq.com) (no credit card required)
 - [MongoDB Community Server](https://www.mongodb.com/try/download/community) installed locally
+
+Start MongoDB before running the server:
+```bash
+brew services start mongodb-community
+```
 
 ### 1. Clone the repo
 ```bash
@@ -139,7 +147,7 @@ The tutor is instructed to teach from absolute zero — every term, symbol, and 
 |----------|-------------|
 | `GROQ_API_KEY` | Your Groq API key from [console.groq.com](https://console.groq.com) |
 | `PORT` | Server port (default: 5000) |
-| `MONGODB_URI` | MongoDB connection string (default: localhost) |
+| `MONGODB_URI` | MongoDB connection string (default: `mongodb://localhost:27017/dsa-grind`) |
 
 ---
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TOPICS } from "../data/topics";
 
-export default function Sidebar({ progress, activeTopic, onSelectTopic, onResetTopic, isDark, onToggleTheme }) {
+export default function Sidebar({ progress, activeTopic, onSelectTopic, onResetTopic, isDark, onToggleTheme, onShowDashboard }) {
   const { completedTopics, currentTopicId, streak } = progress;
   const [confirmReset, setConfirmReset] = useState(null);
 
@@ -29,6 +29,9 @@ export default function Sidebar({ progress, activeTopic, onSelectTopic, onResetT
           <span className="streak-count">{streak?.days || 0}</span>
           <span className="streak-label">day streak</span>
         </div>
+        <button className="dashboard-btn" onClick={onShowDashboard}>
+          📊 Progress
+        </button>
         <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
           {isDark ? "☀️" : "🌙"}
         </button>

@@ -6,6 +6,7 @@ const defaultProgress = {
   completedProblems: {},
   currentProblemIndex: {},
   notes: {},
+  savedCodes: {},
   streak: { days: 0, lastDate: null },
 };
 
@@ -88,7 +89,14 @@ export function useProgress() {
     save(updated);
   };
 
+  const saveCode = (topicId, problemIndex, code) => {
+    const updated = { ...progress };
+    if (!updated.savedCodes) updated.savedCodes = {};
+    updated.savedCodes[`${topicId}-${problemIndex}`] = code;
+    save(updated);
+  };
+
   const resetProgress = () => save(defaultProgress);
 
-  return { progress, completeProblem, completeTopic, saveNote, resetTopic, resetProgress };
+  return { progress, completeProblem, completeTopic, saveNote, saveCode, resetTopic, resetProgress };
 }

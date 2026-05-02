@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import axios from "axios";
 
-export default function ChatPanel({ topic, problemIndex, onProblemComplete, saveNote, progress }) {
+export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNextProblem, saveNote, saveCode, progress }) {
   const [messages, setMessages] = useState([]);
   const [code, setCode] = useState("// Write your solution here\n\n");
   const [loading, setLoading] = useState(false);
@@ -13,12 +13,16 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, save
   const [showToast, setShowToast] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [showHint, setShowHint] = useState(false);
+  const [hintAttempt, setHintAttempt] = useState("");
+  const [showNextBtn, setShowNextBtn] = useState(false);
 
   const problemKey = `${topic?.id}-${problemIndex}`;
 
   useEffect(() => {
     const key = `${topic?.id}-${problemIndex}`;
     setNoteText(progress?.notes?.[key] || "");
+    setCode(progress?.savedCodes?.[key] || "// Write your solution here\n\n");
   }, [problemKey]);
 
   const undoRef = useRef(null);
@@ -37,12 +41,27 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, save
     prevProblemRef.current = problemKey;
 
     setMessages([]);
-    setCode("// Write your solution here\n\n");
     setShowEditor(false);
+    setShowNextBtn(false);
 
     const initMsg = `I want to learn about: "${problemName}" from the topic "${topic.name}". Please start by explaining the concept with a real-world analogy before giving me the problem.`;
     sendMessage(initMsg, []);
   }, [problemKey]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setShowEditor((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (showEditor) handleSubmitCode();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showEditor, code, loading]);
 
   const sendMessage = async (text, existingMessages) => {
     const userMsg = { role: "user", content: text };
@@ -69,6 +88,7 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, save
 
   const handleSubmitCode = () => {
     if (!code.trim() || loading) return;
+    saveCode?.(topic.id, problemIndex, code);
     const msg = `Here is my solution attempt for "${problemName}":\n\`\`\`javascript\n${code}\n\`\`\`\nPlease review it and give me feedback.`;
     sendMessage(msg, messages);
     setShowEditor(false);
@@ -79,13 +99,22 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, save
     undoRef.current = setTimeout(() => {
       setShowToast(false);
       onProblemComplete?.();
-      sendMessage(`I understood this problem. Please give me a quick summary of what I learned and what's coming next.`, messages);
+      setShowNextBtn(true);
+      sendMessage(`I completed "${problemName}". Give me a one-sentence summary of the key concept I just learned.`, messages);
     }, 4000);
   };
 
   const handleUndo = () => {
     clearTimeout(undoRef.current);
     setShowToast(false);
+  };
+
+  const handleRequestHint = () => {
+    if (!hintAttempt.trim() || loading) return;
+    const msg = `Before giving me a hint for "${problemName}", here is what I've tried or thought about so far:\n\n"${hintAttempt}"\n\nBased on my attempt above, please give me a small nudge in the right direction — do NOT reveal the solution. If my approach is actually correct, tell me that and encourage me to keep going.`;
+    sendMessage(msg, messages);
+    setHintAttempt("");
+    setShowHint(false);
   };
 
   if (!topic || problemIndex === null || problemIndex === undefined) {
@@ -112,6 +141,9 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, save
         <button className="notes-btn" onClick={() => setShowNotes(!showNotes)} title="My notes">
           📝
         </button>
+        <button className="hint-btn" onClick={() => setShowHint(!showHint)} title="Get a hint">
+          💡
+        </button>
       </div>
 
       <div className="messages-area">
@@ -133,7 +165,43 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, save
           </div>
         )}
         <div ref={bottomRef} />
+        {showNextBtn && (
+          <div className="next-problem-wrap">
+            <button
+              className="next-problem-btn"
+              onClick={() => { setShowNextBtn(false); onNextProblem?.(); }}
+              style={{ borderColor: topic.color, color: topic.color }}
+            >
+              {problemIndex + 1 < topic.problems.length
+                ? `→ Next: ${topic.problems[problemIndex + 1]}`
+                : `→ Topic Complete! Start Next Topic`}
+            </button>
+          </div>
+        )}
       </div>
+
+      {showHint && (
+        <div className="hint-area">
+          <div className="hint-header">
+            <span>💡 Get a Hint — {problemName}</span>
+            <button onClick={() => setShowHint(false)}>✕</button>
+          </div>
+          <p className="hint-rule">Tell me what you've tried first, then I'll give you a nudge.</p>
+          <textarea
+            className="hint-input"
+            placeholder="Describe your thinking or what you've attempted so far..."
+            value={hintAttempt}
+            onChange={(e) => setHintAttempt(e.target.value)}
+          />
+          <button
+            className="hint-submit-btn"
+            onClick={handleRequestHint}
+            disabled={!hintAttempt.trim() || loading}
+          >
+            Get Hint →
+          </button>
+        </div>
+      )}
 
       {showNotes && (
         <div className="notes-area">

@@ -7,7 +7,7 @@ import { TOPICS } from "./data/topics";
 import "./App.css";
 
 export default function App() {
-  const { progress, completeProblem, completeTopic } = useProgress();
+  const { progress, completeProblem, completeTopic, saveNote, resetTopic } = useProgress();
   const [activeTopic, setActiveTopic] = useState(null);
   const [activeProblemIndex, setActiveProblemIndex] = useState(null);
 
@@ -32,7 +32,12 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar progress={progress} activeTopic={activeTopic} onSelectTopic={handleSelectTopic} />
+      <Sidebar
+        progress={progress}
+        activeTopic={activeTopic}
+        onSelectTopic={handleSelectTopic}
+        onResetTopic={resetTopic}
+      />
       <ProblemPanel
         topic={activeTopic}
         progress={progress}
@@ -43,6 +48,8 @@ export default function App() {
         topic={activeTopic}
         problemIndex={activeProblemIndex}
         onProblemComplete={handleProblemComplete}
+        saveNote={saveNote}
+        progress={progress}
       />
     </div>
   );

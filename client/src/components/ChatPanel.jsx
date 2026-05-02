@@ -4,19 +4,28 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import axios from "axios";
 
-export default function ChatPanel({ topic, problemIndex, onProblemComplete }) {
+export default function ChatPanel({ topic, problemIndex, onProblemComplete, saveNote, progress }) {
   const [messages, setMessages] = useState([]);
   const [code, setCode] = useState("// Write your solution here\n\n");
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   const [showEditor, setShowEditor] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [noteText, setNoteText] = useState("");
+
+  const problemKey = `${topic?.id}-${problemIndex}`;
+
+  useEffect(() => {
+    const key = `${topic?.id}-${problemIndex}`;
+    setNoteText(progress?.notes?.[key] || "");
+  }, [problemKey]);
+
   const undoRef = useRef(null);
   const bottomRef = useRef(null);
   const prevProblemRef = useRef(null);
 
   const problemName = topic?.problems?.[problemIndex];
-  const problemKey = `${topic?.id}-${problemIndex}`;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -100,6 +109,9 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete }) {
         <button className="done-btn" onClick={handleMarkDone} title="Mark as complete">
           ✅ Mark Done
         </button>
+        <button className="notes-btn" onClick={() => setShowNotes(!showNotes)} title="My notes">
+          📝
+        </button>
       </div>
 
       <div className="messages-area">
@@ -122,6 +134,27 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete }) {
         )}
         <div ref={bottomRef} />
       </div>
+
+      {showNotes && (
+        <div className="notes-area">
+          <div className="notes-header">
+            <span>📝 My Notes — {problemName}</span>
+            <button onClick={() => setShowNotes(false)}>✕</button>
+          </div>
+          <textarea
+            className="notes-input"
+            placeholder="Write your summary, key insights, or anything you want to remember..."
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+          />
+          <button
+            className="save-note-btn"
+            onClick={() => { saveNote?.(topic.id, problemIndex, noteText); setShowNotes(false); }}
+          >
+            Save Note ✓
+          </button>
+        </div>
+      )}
 
       {showEditor && (
         <div className="editor-area">

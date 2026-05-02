@@ -10,6 +10,7 @@ export default function App() {
   const { progress, completeProblem, completeTopic, saveNote, resetTopic } = useProgress();
   const [activeTopic, setActiveTopic] = useState(null);
   const [activeProblemIndex, setActiveProblemIndex] = useState(null);
+  const [isDark, setIsDark] = useState(true);
 
   const handleSelectTopic = (topic) => {
     setActiveTopic(topic);
@@ -31,12 +32,14 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div className={`app ${isDark ? "dark" : "light"}`}>
       <Sidebar
         progress={progress}
         activeTopic={activeTopic}
         onSelectTopic={handleSelectTopic}
         onResetTopic={resetTopic}
+        isDark={isDark}
+        onToggleTheme={() => setIsDark(!isDark)}
       />
       <ProblemPanel
         topic={activeTopic}

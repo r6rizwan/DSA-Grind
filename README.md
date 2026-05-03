@@ -71,22 +71,6 @@ Concept → Attempt → Feedback → Optimization
 
 ---
 
-## 📸 Screens Breakdown
-
-### 🚀 Onboarding
-
-First-time user flow with guided setup <img src="Images/Onboarding-Screen.jpeg" width="700"/>
-
-### 📊 Dashboard
-
-Track progress, streaks, and resume instantly <img src="Images/Dashboard-Screen.jpeg" width="700"/>
-
-### 📚 Learning Module
-
-AI tutor + code editor + problem flow <img src="Images/Learning-Screen.jpeg" width="700"/>
-
----
-
 ## 🛠️ Tech Stack
 
 | Layer    | Tech                          |

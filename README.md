@@ -27,6 +27,22 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 
 ---
 
+## 📸 App Screenshots
+
+### 🚀 Onboarding Flow
+
+<img src="Images/Onboarding-Screen.jpeg" width="700"/>
+
+### 📊 Dashboard
+
+<img src="Images/Dashboard-Screen.jpeg" width="700"/>
+
+### 📚 Learning Module
+
+<img src="Images/Learning-Screen.jpeg" width="700"/>
+
+---
+
 ## 🛠️ Tech Stack
 
 | Layer | Tech |
@@ -85,6 +101,10 @@ Start the server:
 ## 📁 Project Structure
 
     DSA-Grind/
+    ├── Images/
+    │   ├── Onboarding-Screen.jpeg
+    │   ├── Dashboard-Screen.jpeg
+    │   └── Learning-Screen.jpeg
     ├── server/
     │   ├── index.js          # Express server + Groq API + system prompt
     │   ├── .env.example      # Environment variable template

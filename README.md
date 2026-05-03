@@ -8,11 +8,17 @@ A structured, AI-powered DSA learning app built for developers who want to maste
 
 ## 🚀 Preview
 
-<p align="center">
-  <img src="Images/Onboarding-Screen.jpeg" width="30%" />
-  <img src="Images/Dashboard-Screen.jpeg" width="30%" />
-  <img src="Images/Learning-Screen.jpeg" width="30%" />
-</p>
+### 🚀 Onboarding
+First-time user flow with guided setup  
+<img src="Images/Onboarding-Screen.jpeg" width="700"/>
+
+### 📊 Dashboard
+Track progress, streaks, and resume instantly  
+<img src="Images/Dashboard-Screen.jpeg" width="700"/>
+
+### 📚 Learning Module
+AI tutor + code editor + problem flow  
+<img src="Images/Learning-Screen.jpeg" width="700"/>
 
 ---
 

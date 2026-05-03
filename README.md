@@ -13,11 +13,17 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 - 🤖 **AI tutor (Groq + Llama 3.3 70B)** — explains concepts using real-world analogies before giving you the problem
 - 💻 **Monaco editor** (VS Code's engine) — write JavaScript solutions directly in the app
 - 🔍 **AI code review** — submit your solution and get detailed feedback + optimized version
-- 💾 **Auto progress tracking** — saved to local MongoDB, survives browser clears
-- 🎨 **Vibrant UI** — each topic has its own color theme
-- 📝 **Notes per problem** — save your own summary and key insights for each problem
+- 💡 **Hint system** — get a nudge only after describing what you've already tried
+- ➡️ **Next problem button** — auto-navigates after marking a problem done
+- 💾 **Save code per problem** — your solution is stored and restored every time
+- 📝 **Notes per problem** — save your own summary and key insights
 - 🔥 **Streak tracker** — tracks your daily learning consistency
 - ↺ **Reset individual topic** — redo any topic without losing other progress
+- ↩️ **Undo mark done** — 4-second undo window to prevent accidental completion
+- 🏠 **Personalized home screen** — greets you by name with stats and a continue button
+- ☀️ **Dark/light mode toggle**
+- ⌨️ **Keyboard shortcuts** — Cmd+K to open editor, Cmd+Enter to submit code
+- 🎨 **Vibrant UI** — each topic has its own color theme
 
 ---
 
@@ -37,73 +43,67 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 
 ### Prerequisites
 - Node.js 18+
-- Free [Groq API key](https://console.groq.com) (no credit card required)
-- [MongoDB Community Server](https://www.mongodb.com/try/download/community) installed locally
+- Free Groq API key from https://console.groq.com (no credit card required)
+- MongoDB Community Server installed locally
 
 Start MongoDB before running the server:
-```bash
-brew services start mongodb-community
-```
+
+    brew services start mongodb-community
 
 ### 1. Clone the repo
-```bash
-git clone https://github.com/your-username/dsa-grind.git
-cd dsa-grind
-```
+
+    git clone https://github.com/r6rizwan/DSA-Grind.git
+    cd DSA-Grind
 
 ### 2. Backend setup
-```bash
-cd server
-npm install
-cp .env.example .env
-```
 
-Open `.env` and add your Groq API key:
-```
-GROQ_API_KEY=your_groq_api_key_here
-```
+    cd server
+    npm install
+    cp .env.example .env
+
+Open .env and add your keys:
+
+    GROQ_API_KEY=your_groq_api_key_here
+    MONGODB_URI=mongodb://localhost:27017/dsa-grind
 
 Start the server:
-```bash
-npm run dev
-```
+
+    npm run dev
 
 ### 3. Frontend setup (new terminal)
-```bash
-cd client
-npm install
-npm run dev
-```
+
+    cd client
+    npm install
+    npm run dev
 
 ### 4. Open the app
-```
-http://localhost:5173
-```
+
+    http://localhost:5173
 
 ---
 
 ## 📁 Project Structure
 
-```
-dsa-grind/
-├── server/
-│   ├── index.js          # Express server + Groq API + system prompt
-│   ├── .env.example      # Environment variable template
-│   └── package.json
-└── client/
-    ├── src/
-    │   ├── components/
-    │   │   ├── Sidebar.jsx       # Topic list with progress indicators
-    │   │   ├── ProblemPanel.jsx  # Problem cards with difficulty badges
-    │   │   └── ChatPanel.jsx     # AI tutor chat + Monaco code editor
-    │   ├── data/
-    │   │   └── topics.js         # 12 topics × 5 problems each
-    │   ├── hooks/
-    │   │   └── useProgress.js    # MongoDB progress tracker
-    │   ├── App.jsx
-    │   └── App.css
-    └── package.json
-```
+    DSA-Grind/
+    ├── server/
+    │   ├── index.js          # Express server + Groq API + system prompt
+    │   ├── .env.example      # Environment variable template
+    │   └── package.json
+    └── client/
+        ├── src/
+        │   ├── components/
+        │   │   ├── Sidebar.jsx       # Topic list with progress + reset
+        │   │   ├── ProblemPanel.jsx  # Problem cards with difficulty badges
+        │   │   ├── ChatPanel.jsx     # AI tutor chat + Monaco code editor
+        │   │   ├── Home.jsx          # Personalized home screen
+        │   │   └── Onboarding.jsx    # First-launch name capture
+        │   ├── data/
+        │   │   └── topics.js         # 12 topics x 5 problems each
+        │   ├── hooks/
+        │   │   └── useProgress.js    # MongoDB progress tracker
+        │   ├── App.jsx
+        │   └── App.css
+        └── package.json
 
 ---
 
@@ -111,14 +111,21 @@ dsa-grind/
 
 Each problem follows a 4-phase flow:
 
-```
-Phase 1 → Concept explanation with real-world analogy (no code yet)
-Phase 2 → Problem is given — you attempt it in the Monaco editor
-Phase 3 → Submit your solution → AI reviews and gives feedback
-Phase 4 → AI shows the optimized solution with full explanation
-```
+    Phase 1 → Concept explanation with real-world analogy (no code yet)
+    Phase 2 → Problem is given — you attempt it in the Monaco editor
+    Phase 3 → Submit your solution → AI reviews and gives feedback
+    Phase 4 → AI shows the optimized solution only if needed
 
-The tutor is instructed to teach from absolute zero — every term, symbol, and concept is explained as if the student has never coded before.
+The tutor teaches from absolute zero — every term, symbol, and concept is explained as if the student has never coded before.
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| Cmd + K | Open / close code editor |
+| Cmd + Enter | Submit code for review |
 
 ---
 
@@ -145,9 +152,9 @@ The tutor is instructed to teach from absolute zero — every term, symbol, and 
 
 | Variable | Description |
 |----------|-------------|
-| `GROQ_API_KEY` | Your Groq API key from [console.groq.com](https://console.groq.com) |
-| `PORT` | Server port (default: 5000) |
-| `MONGODB_URI` | MongoDB connection string (default: `mongodb://localhost:27017/dsa-grind`) |
+| GROQ_API_KEY | Your Groq API key from console.groq.com |
+| PORT | Server port (default: 5000) |
+| MONGODB_URI | MongoDB connection string (default: mongodb://localhost:27017/dsa-grind) |
 
 ---
 

@@ -27,18 +27,19 @@ Built with **React + Vite**, **Node.js + Express**, and **Groq AI (Llama 3.3 70B
 
 ---
 
-## 📸 App Screenshots
-
 ### 🚀 Onboarding Flow
 
+First-time user experience with name capture and guided intro 
 <img src="Images/Onboarding-Screen.jpeg" width="700"/>
 
 ### 📊 Dashboard
 
+Personalized home with progress tracking, streaks, and quick resume  
 <img src="Images/Dashboard-Screen.jpeg" width="700"/>
 
 ### 📚 Learning Module
 
+Interactive problem-solving with AI tutor and Monaco editor  
 <img src="Images/Learning-Screen.jpeg" width="700"/>
 
 ---

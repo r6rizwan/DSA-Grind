@@ -9,6 +9,7 @@ const defaultProgress = {
   notes: {},
   savedCodes: {},
   streak: { days: 0, lastDate: null },
+  difficulty: "guided",
 };
 
 async function fetchProgress() {
@@ -51,60 +52,66 @@ export function useProgress() {
       .finally(() => setLoaded(true));
   }, []);
 
-  const save = (updated) => {
-    const withStreak = { ...updated, streak: updateStreak(updated) };
-    setProgress(withStreak);
-    saveProgress(withStreak).catch(() => {});
+  const save = (updater) => {
+    setProgress((prev) => {
+      const updated = typeof updater === "function" ? updater(prev) : updater;
+      const withStreak = { ...updated, streak: updateStreak(updated) };
+      saveProgress(withStreak).catch(() => {});
+      return withStreak;
+    });
   };
 
-  const saveName = (name) => {
-    const updated = { ...progress, userName: name };
-    save(updated);
-  };
+  const saveName = (name) => save((prev) => ({ ...prev, userName: name }));
+
+  const saveDifficulty = (level) => save((prev) => ({ ...prev, difficulty: level }));
 
   const completeProblem = (topicId, problemIndex) => {
-    const updated = { ...progress };
-    if (!updated.completedProblems[topicId]) updated.completedProblems[topicId] = [];
-    if (!updated.completedProblems[topicId].includes(problemIndex)) {
-      updated.completedProblems[topicId].push(problemIndex);
-    }
-    updated.currentProblemIndex[topicId] = problemIndex + 1;
-    save(updated);
+    save((prev) => {
+      const next = { ...prev, completedProblems: { ...prev.completedProblems }, currentProblemIndex: { ...prev.currentProblemIndex } };
+      if (!next.completedProblems[topicId]) next.completedProblems[topicId] = [];
+      if (!next.completedProblems[topicId].includes(problemIndex)) next.completedProblems[topicId] = [...next.completedProblems[topicId], problemIndex];
+      next.currentProblemIndex[topicId] = problemIndex + 1;
+      return next;
+    });
   };
 
   const completeTopic = (topicId) => {
-    const updated = { ...progress };
-    if (!updated.completedTopics.includes(topicId)) {
-      updated.completedTopics.push(topicId);
-    }
-    updated.currentTopicId = topicId + 1;
-    save(updated);
+    save((prev) => {
+      const next = { ...prev, completedTopics: [...prev.completedTopics] };
+      if (!next.completedTopics.includes(topicId)) next.completedTopics.push(topicId);
+      next.currentTopicId = topicId + 1;
+      return next;
+    });
   };
 
   const saveNote = (topicId, problemIndex, text) => {
-    const updated = { ...progress };
-    if (!updated.notes) updated.notes = {};
-    updated.notes[`${topicId}-${problemIndex}`] = text;
-    save(updated);
+    save((prev) => ({
+      ...prev,
+      notes: { ...(prev.notes || {}), [`${topicId}-${problemIndex}`]: text },
+    }));
   };
 
   const saveCode = (topicId, problemIndex, code) => {
-    const updated = { ...progress };
-    if (!updated.savedCodes) updated.savedCodes = {};
-    updated.savedCodes[`${topicId}-${problemIndex}`] = code;
-    save(updated);
+    save((prev) => ({
+      ...prev,
+      savedCodes: { ...(prev.savedCodes || {}), [`${topicId}-${problemIndex}`]: code },
+    }));
   };
 
   const resetTopic = (topicId) => {
-    const updated = { ...progress };
-    updated.completedTopics = updated.completedTopics.filter((id) => id !== topicId);
-    updated.completedProblems[topicId] = [];
-    updated.currentProblemIndex[topicId] = 0;
-    if (updated.currentTopicId > topicId) updated.currentTopicId = topicId;
-    save(updated);
+    save((prev) => {
+      const next = {
+        ...prev,
+        completedTopics: prev.completedTopics.filter((id) => id !== topicId),
+        completedProblems: { ...prev.completedProblems, [topicId]: [] },
+        currentProblemIndex: { ...prev.currentProblemIndex, [topicId]: 0 },
+      };
+      if (next.currentTopicId > topicId) next.currentTopicId = topicId;
+      return next;
+    });
   };
 
-  const resetProgress = () => save({ ...defaultProgress, userName: progress.userName });
+  const resetProgress = () => save((prev) => ({ ...defaultProgress, userName: prev.userName }));
 
-  return { progress, loaded, saveName, completeProblem, completeTopic, saveNote, saveCode, resetTopic, resetProgress };
+  return { progress, loaded, saveName, saveDifficulty, completeProblem, completeTopic, saveNote, saveCode, resetTopic, resetProgress };
 }

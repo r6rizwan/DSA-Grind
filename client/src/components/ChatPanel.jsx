@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import axios from "axios";
 
-export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNextProblem, saveNote, saveCode, progress }) {
+export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNextProblem, saveNote, saveCode, progress, isDark }) {
   const [messages, setMessages] = useState([]);
   const [code, setCode] = useState("// Write your solution here\n\n");
   const [loading, setLoading] = useState(false);
@@ -27,9 +27,12 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
 
   const undoRef = useRef(null);
   const bottomRef = useRef(null);
-  const prevProblemRef = useRef(null);
+  const prevSessionRef = useRef(null);
+  const requestIdRef = useRef(0);
 
   const problemName = topic?.problems?.[problemIndex];
+  const difficulty = progress?.difficulty || "guided";
+  const isInterviewMode = difficulty === "interview";
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,19 +40,25 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
 
   useEffect(() => {
     if (!topic || problemIndex === null || problemIndex === undefined) return;
-    if (prevProblemRef.current === problemKey) return;
-    prevProblemRef.current = problemKey;
+    const sessionKey = `${problemKey}-${difficulty}`;
+    if (prevSessionRef.current === sessionKey) return;
+    prevSessionRef.current = sessionKey;
 
     setMessages([]);
     setShowEditor(false);
     setShowNextBtn(false);
 
-    const initMsg = `I want to learn about: "${problemName}" from the topic "${topic.name}". Please start by explaining the concept with a real-world analogy before giving me the problem.`;
+    const initMsg = difficulty === "guided"
+      ? `I want to learn about: "${problemName}" from the topic "${topic.name}". Please start by explaining the concept with a real-world analogy before giving me the problem.`
+      : `I want to solve "${problemName}" from the topic "${topic.name}". Please give only the problem statement, input/output format, and constraints. Do not include concept explanation unless I ask.`;
     sendMessage(initMsg, []);
-  }, [problemKey]);
+  }, [problemKey, difficulty]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      const target = e.target;
+      const isEditable = target?.isContentEditable || target?.tagName === "INPUT" || target?.tagName === "TEXTAREA";
+      if (isEditable) return;
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
         setShowEditor((prev) => !prev);
@@ -63,26 +72,39 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showEditor, code, loading]);
 
-  const sendMessage = async (text, existingMessages) => {
+  const sendMessage = async (text, existingMessages = null) => {
     const userMsg = { role: "user", content: text };
-    const updated = [...existingMessages, userMsg];
-    setMessages(updated);
+    const updated = existingMessages ? [...existingMessages, userMsg] : [...messages, userMsg];
+    const requestId = ++requestIdRef.current;
+    if (existingMessages) {
+      setMessages(updated);
+    } else {
+      setMessages((prev) => [...prev, userMsg]);
+    }
     setLoading(true);
 
     try {
-      const res = await axios.post("/api/chat", { messages: updated, userName: progress?.userName || "" });
+      const res = await axios.post("/api/chat", {
+        messages: updated,
+        userName: progress?.userName || "",
+        difficulty: progress?.difficulty || "guided",
+      });
       const assistantMsg = { role: "assistant", content: res.data.reply };
-      setMessages([...updated, assistantMsg]);
+      if (requestId === requestIdRef.current) {
+        setMessages((prev) => [...prev, assistantMsg]);
+      }
     } catch (err) {
-      setMessages([...updated, { role: "assistant", content: "❌ Error connecting to server. Make sure the backend is running." }]);
+      if (requestId === requestIdRef.current) {
+        setMessages((prev) => [...prev, { role: "assistant", content: "❌ Error connecting to server. Make sure the backend is running." }]);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   };
 
   const handleSend = () => {
     if (!input.trim() || loading) return;
-    sendMessage(input.trim(), messages);
+    sendMessage(input.trim());
     setInput("");
   };
 
@@ -90,7 +112,7 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
     if (!code.trim() || loading) return;
     saveCode?.(topic.id, problemIndex, code);
     const msg = `Here is my solution attempt for "${problemName}":\n\`\`\`javascript\n${code}\n\`\`\`\nPlease review it and give me feedback.`;
-    sendMessage(msg, messages);
+    sendMessage(msg);
     setShowEditor(false);
   };
 
@@ -100,7 +122,7 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
       setShowToast(false);
       onProblemComplete?.();
       setShowNextBtn(true);
-      sendMessage(`I completed "${problemName}". Give me a one-sentence summary of the key concept I just learned.`, messages);
+      sendMessage(`I completed "${problemName}". Give me a one-sentence summary of the key concept I just learned.`);
     }, 4000);
   };
 
@@ -110,9 +132,10 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
   };
 
   const handleRequestHint = () => {
+    if (isInterviewMode) return;
     if (!hintAttempt.trim() || loading) return;
     const msg = `Before giving me a hint for "${problemName}", here is what I've tried or thought about so far:\n\n"${hintAttempt}"\n\nBased on my attempt above, please give me a small nudge in the right direction — do NOT reveal the solution. If my approach is actually correct, tell me that and encourage me to keep going.`;
-    sendMessage(msg, messages);
+    sendMessage(msg);
     setHintAttempt("");
     setShowHint(false);
   };
@@ -141,7 +164,7 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
         <button className="notes-btn" onClick={() => setShowNotes(!showNotes)} title="My notes">
           📝
         </button>
-        <button className="hint-btn" onClick={() => setShowHint(!showHint)} title="Get a hint">
+        <button className="hint-btn" onClick={() => setShowHint(!showHint)} title={isInterviewMode ? "Hints are disabled in Interview mode" : "Get a hint"} disabled={isInterviewMode}>
           💡
         </button>
       </div>
@@ -180,7 +203,7 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
         )}
       </div>
 
-      {showHint && (
+      {showHint && !isInterviewMode && (
         <div className="hint-area">
           <div className="hint-header">
             <span>💡 Get a Hint — {problemName}</span>
@@ -233,7 +256,7 @@ export default function ChatPanel({ topic, problemIndex, onProblemComplete, onNe
           <Editor
             height="220px"
             defaultLanguage="javascript"
-            theme="vs-dark"
+            theme={isDark ? "vs-dark" : "vs"}
             value={code}
             onChange={(val) => setCode(val || "")}
             options={{ fontSize: 14, minimap: { enabled: false }, scrollBeyondLastLine: false }}

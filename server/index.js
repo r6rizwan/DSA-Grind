@@ -46,15 +46,30 @@ PHASES per problem:
 TOPIC ORDER: Arrays → Strings → Hashing → Two Pointers → Sliding Window → Stack & Queue → Linked Lists → Binary Search → Recursion → Trees → Graphs → Dynamic Programming`;
 
 app.post("/api/chat", async (req, res) => {
-  const { messages, userName } = req.body;
+  const { messages, userName, difficulty = "guided" } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "messages array required" });
   }
 
+  const modePrompt = difficulty === "interview"
+    ? `MODE: Interview
+- Do not provide hints or scaffolding under any circumstance.
+- Do not provide conceptual explanations before or during the attempt.
+- Give only concise problem statements and strict evaluation feedback.
+- Keep a professional interview-like tone.`
+    : difficulty === "challenge"
+      ? `MODE: Challenge
+- Provide the problem statement first.
+- Keep conceptual help minimal unless the student asks.
+- Hints are allowed only when requested and must be brief.`
+      : `MODE: Guided
+- Follow the default teaching flow with analogy-first explanations and beginner-friendly guidance.`;
+
+  const baseWithMode = `${BASE_PROMPT}\n\n${modePrompt}`;
   const systemPrompt = userName
-    ? `${BASE_PROMPT}\n\nThe student's name is ${userName}. Address them by name occasionally to keep it personal and encouraging.`
-    : BASE_PROMPT;
+    ? `${baseWithMode}\n\nThe student's name is ${userName}. Address them by name occasionally to keep it personal and encouraging.`
+    : baseWithMode;
 
   try {
     const completion = await groq.chat.completions.create({

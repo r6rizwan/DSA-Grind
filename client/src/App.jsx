@@ -9,20 +9,24 @@ import { TOPICS } from "./data/topics";
 import "./App.css";
 
 export default function App() {
-  const { progress, loaded, saveName, completeProblem, completeTopic, saveNote, saveCode, resetTopic } = useProgress();
+  const { progress, loaded, saveName, saveDifficulty, completeProblem, completeTopic, saveNote, saveCode, resetTopic } = useProgress();
   const [activeTopic, setActiveTopic] = useState(null);
   const [activeProblemIndex, setActiveProblemIndex] = useState(null);
-  const [isDark, setIsDark] = useState(true);
-  const [view, setView] = useState("home"); // 'home' | 'learn'
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("dsa-theme");
+    return saved ? saved === "dark" : true;
+  });
+  const [view, setView] = useState("home");
 
-  // Once loaded, if no name → will show onboarding via render logic
   useEffect(() => {
     if (loaded && progress.userName) setView("home");
   }, [loaded]);
 
-  const handleOnboardingComplete = (name) => {
-    saveName(name);
-  };
+  useEffect(() => {
+    localStorage.setItem("dsa-theme", isDark ? "dark" : "light");
+  }, [isDark]);
+
+  const handleOnboardingComplete = (name) => saveName(name);
 
   const handleSelectTopic = (topic) => {
     setActiveTopic(topic);
@@ -30,9 +34,7 @@ export default function App() {
     setView("learn");
   };
 
-  const handleSelectProblem = (index) => {
-    setActiveProblemIndex(index);
-  };
+  const handleSelectProblem = (index) => setActiveProblemIndex(index);
 
   const handleContinue = (topic, problemIndex) => {
     setActiveTopic(topic);
@@ -63,10 +65,8 @@ export default function App() {
     }
   };
 
-  // Not loaded yet — blank
-  if (!loaded) return <div className="app-loading"><span>⚔️</span></div>;
+  if (!loaded) return <div className={`app-loading ${isDark ? "dark" : "light"}`}><span>⚔️</span></div>;
 
-  // No name → onboarding
   if (!progress.userName) {
     return (
       <div className={`app-full ${isDark ? "dark" : "light"}`}>
@@ -91,7 +91,7 @@ export default function App() {
         <Home
           progress={progress}
           onContinue={handleContinue}
-          onStartLearning={() => setView("learn")}
+          saveDifficulty={saveDifficulty}
         />
       ) : (
         <>
@@ -109,6 +109,7 @@ export default function App() {
             saveNote={saveNote}
             saveCode={saveCode}
             progress={progress}
+            isDark={isDark}
           />
         </>
       )}

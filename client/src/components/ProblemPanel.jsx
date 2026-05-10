@@ -14,6 +14,12 @@ export default function ProblemPanel({ topic, progress, activeProblem, onSelectP
   }
 
   const completedProblems = progress.completedProblems[topic.id] || [];
+  const difficulty = progress?.difficulty || "guided";
+  const helperText = difficulty === "guided"
+    ? "💡 Click a problem to load it in the tutor chat. The AI will explain the concept before giving you the challenge."
+    : difficulty === "challenge"
+      ? "💡 Click a problem to start challenge mode. You will get the problem statement first with minimal guidance."
+      : "💡 Click a problem to start interview mode. You will get the prompt and strict evaluation without hints.";
 
   return (
     <div className="problem-panel">
@@ -52,7 +58,7 @@ export default function ProblemPanel({ topic, progress, activeProblem, onSelectP
       </div>
 
       <div className="concept-prompt">
-        <p>💡 Click a problem to load it in the tutor chat. The AI will explain the concept before giving you the challenge.</p>
+        <p>{helperText}</p>
       </div>
     </div>
   );
